@@ -1,0 +1,6 @@
+-r cad_pipeline/requirements.txt
+-r cae_pipeline/requirements.txt
+fastapi>=0.110
+uvicorn>=0.27
+httpx>=0.27
+pillow>=10

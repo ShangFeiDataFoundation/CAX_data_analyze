@@ -1,0 +1,84 @@
+# Local secrets and machine-specific configuration
+config.local.json
+config.json
+.env
+.env.*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# CAX datasets, archives and extracted samples
+CAD_dataset/
+CAE_dataset/
+test_workspace/**
+!test_workspace/README.md
+商飞数据基座/
+*.7z
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.cas.h5
+*.dat.h5
+*.cgns
+*.cgns.gz
+*.bdf
+*.nas
+*.op2
+*.op4
+*.step
+*.stp
+*.igs
+*.iges
+*.stl
+*.rst
+
+# External sample download cache (keep the fetch instructions)
+外部样例数据/**
+!外部样例数据/README.md
+!外部样例数据/fetch_samples.py
+!外部样例数据/manifest.json
+
+# Parsed output, reports and render caches
+data/
+json_out/
+.cax_reports/
+frontend_runs/
+evaluation_report.md
+cae_evaluation_report.md
+*.log
+
+# Generated demo output
+demo/pipeline_demo.html
+demo/_*.png
+
+# Local tool caches and non-code binary attachments
+.mcpdocx/
+.mplconfig/
+图片和附件/
+草稿.md
+*.docx
+*.pdf
+*.pptx
+*.xlsx
+*.png
+*.jpg
+*.jpeg
+
+# Editors and OS metadata
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+~$*

@@ -1,0 +1,1130 @@
+{
+  "$defs": {
+    "Assembly": {
+      "additionalProperties": false,
+      "properties": {
+        "instances": {
+          "items": {
+            "$ref": "#/$defs/AssemblyInstance"
+          },
+          "title": "Instances",
+          "type": "array"
+        }
+      },
+      "title": "Assembly",
+      "type": "object"
+    },
+    "AssemblyInstance": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        },
+        "placement": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Placement",
+          "type": "array"
+        },
+        "children": {
+          "items": {
+            "$ref": "#/$defs/AssemblyInstance"
+          },
+          "title": "Children",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "ref"
+      ],
+      "title": "AssemblyInstance",
+      "type": "object"
+    },
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "xmin": {
+          "title": "Xmin",
+          "type": "number"
+        },
+        "ymin": {
+          "title": "Ymin",
+          "type": "number"
+        },
+        "zmin": {
+          "title": "Zmin",
+          "type": "number"
+        },
+        "xmax": {
+          "title": "Xmax",
+          "type": "number"
+        },
+        "ymax": {
+          "title": "Ymax",
+          "type": "number"
+        },
+        "zmax": {
+          "title": "Zmax",
+          "type": "number"
+        }
+      },
+      "required": [
+        "xmin",
+        "ymin",
+        "zmin",
+        "xmax",
+        "ymax",
+        "zmax"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "CadContent": {
+      "additionalProperties": false,
+      "properties": {
+        "product": {
+          "$ref": "#/$defs/Product"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/Part"
+          },
+          "title": "Parts",
+          "type": "array"
+        },
+        "assembly": {
+          "$ref": "#/$defs/Assembly"
+        },
+        "rendered_views": {
+          "items": {
+            "$ref": "#/$defs/RenderAsset"
+          },
+          "title": "Rendered Views",
+          "type": "array"
+        },
+        "visual": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "product",
+        "parts"
+      ],
+      "title": "CadContent",
+      "type": "object"
+    },
+    "Capabilities": {
+      "additionalProperties": false,
+      "properties": {
+        "geometry": {
+          "default": false,
+          "title": "Geometry",
+          "type": "boolean"
+        },
+        "mesh": {
+          "default": false,
+          "title": "Mesh",
+          "type": "boolean"
+        },
+        "setup": {
+          "default": false,
+          "title": "Setup",
+          "type": "boolean"
+        },
+        "results": {
+          "default": false,
+          "title": "Results",
+          "type": "boolean"
+        },
+        "render": {
+          "default": false,
+          "title": "Render",
+          "type": "boolean"
+        },
+        "vision": {
+          "default": false,
+          "title": "Vision",
+          "type": "boolean"
+        }
+      },
+      "title": "Capabilities",
+      "type": "object"
+    },
+    "Classification": {
+      "additionalProperties": false,
+      "properties": {
+        "taxonomy_version": {
+          "title": "Taxonomy Version",
+          "type": "string"
+        },
+        "facets": {
+          "items": {
+            "$ref": "#/$defs/ClassificationFacet"
+          },
+          "title": "Facets",
+          "type": "array"
+        },
+        "summary": {
+          "items": {
+            "$ref": "#/$defs/ClassificationSummary"
+          },
+          "title": "Summary",
+          "type": "array"
+        }
+      },
+      "required": [
+        "taxonomy_version"
+      ],
+      "title": "Classification",
+      "type": "object"
+    },
+    "ClassificationFacet": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label_zh": {
+          "title": "Label Zh",
+          "type": "string"
+        },
+        "layer": {
+          "enum": [
+            "data",
+            "metadata"
+          ],
+          "title": "Layer",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "geometry",
+            "topology",
+            "feature",
+            "assembly",
+            "simulation_method",
+            "material",
+            "boundary_condition",
+            "mesh",
+            "result",
+            "derived_metric",
+            "visual_semantic",
+            "asset",
+            "identity",
+            "source_file",
+            "technical",
+            "lineage",
+            "quality",
+            "capability"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "subcategory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subcategory"
+        },
+        "origin": {
+          "enum": [
+            "declared",
+            "extracted",
+            "computed",
+            "derived",
+            "inferred",
+            "observed"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "scalar",
+            "string",
+            "boolean",
+            "table",
+            "array"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        },
+        "json_pointer": {
+          "title": "Json Pointer",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "item_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Item Count"
+        }
+      },
+      "required": [
+        "key",
+        "label_zh",
+        "layer",
+        "category",
+        "origin",
+        "value_type",
+        "json_pointer"
+      ],
+      "title": "ClassificationFacet",
+      "type": "object"
+    },
+    "ClassificationSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "layer": {
+          "enum": [
+            "data",
+            "metadata"
+          ],
+          "title": "Layer",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "label_zh": {
+          "title": "Label Zh",
+          "type": "string"
+        },
+        "field_count": {
+          "minimum": 0,
+          "title": "Field Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "layer",
+        "category",
+        "label_zh",
+        "field_count"
+      ],
+      "title": "ClassificationSummary",
+      "type": "object"
+    },
+    "FaceTypeCount": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "count"
+      ],
+      "title": "FaceTypeCount",
+      "type": "object"
+    },
+    "Feature": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        },
+        "face_count": {
+          "default": 0,
+          "title": "Face Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "confidence"
+      ],
+      "title": "Feature",
+      "type": "object"
+    },
+    "MassProps": {
+      "additionalProperties": false,
+      "properties": {
+        "volume": {
+          "title": "Volume",
+          "type": "number"
+        },
+        "surface_area": {
+          "title": "Surface Area",
+          "type": "number"
+        }
+      },
+      "required": [
+        "volume",
+        "surface_area"
+      ],
+      "title": "MassProps",
+      "type": "object"
+    },
+    "Meta": {
+      "additionalProperties": false,
+      "properties": {
+        "validation": {
+          "$ref": "#/$defs/Validation"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "domain": {
+          "default": "commercial_aircraft",
+          "title": "Domain",
+          "type": "string"
+        },
+        "classification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Classification"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "Meta",
+      "type": "object"
+    },
+    "ParserInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ParserInfo",
+      "type": "object"
+    },
+    "Part": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBox"
+        },
+        "mass_props": {
+          "$ref": "#/$defs/MassProps"
+        },
+        "is_closed": {
+          "title": "Is Closed",
+          "type": "boolean"
+        },
+        "topology": {
+          "$ref": "#/$defs/Topology"
+        },
+        "face_types": {
+          "items": {
+            "$ref": "#/$defs/FaceTypeCount"
+          },
+          "title": "Face Types",
+          "type": "array"
+        },
+        "features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "bbox",
+        "mass_props",
+        "is_closed",
+        "topology"
+      ],
+      "title": "Part",
+      "type": "object"
+    },
+    "Product": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        },
+        "units": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Units"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema"
+        },
+        "standard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard"
+        }
+      },
+      "title": "Product",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "source_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Files",
+          "type": "array"
+        },
+        "steps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "title": "Provenance",
+      "type": "object"
+    },
+    "RenderAsset": {
+      "additionalProperties": false,
+      "properties": {
+        "view": {
+          "title": "View",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "mime_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mime Type"
+        },
+        "bytes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bytes"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Width"
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Height"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "title": "RenderAsset",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "primary_format": {
+          "title": "Primary Format",
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/SourceFile"
+          },
+          "title": "Files",
+          "type": "array"
+        },
+        "parser": {
+          "$ref": "#/$defs/ParserInfo"
+        },
+        "parsed_at": {
+          "title": "Parsed At",
+          "type": "string"
+        },
+        "solver": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solver"
+        },
+        "dataset": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dataset"
+        }
+      },
+      "required": [
+        "primary_format",
+        "parser",
+        "parsed_at"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "SourceFile": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "format": {
+          "title": "Format",
+          "type": "string"
+        },
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "hash_skipped": {
+          "default": false,
+          "title": "Hash Skipped",
+          "type": "boolean"
+        },
+        "hash_skip_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hash Skip Reason"
+        }
+      },
+      "required": [
+        "role",
+        "path",
+        "format",
+        "bytes"
+      ],
+      "title": "SourceFile",
+      "type": "object"
+    },
+    "Topology": {
+      "additionalProperties": false,
+      "properties": {
+        "solids": {
+          "title": "Solids",
+          "type": "integer"
+        },
+        "shells": {
+          "title": "Shells",
+          "type": "integer"
+        },
+        "faces": {
+          "title": "Faces",
+          "type": "integer"
+        },
+        "edges": {
+          "title": "Edges",
+          "type": "integer"
+        },
+        "vertices": {
+          "title": "Vertices",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "solids",
+        "shells",
+        "faces",
+        "edges",
+        "vertices"
+      ],
+      "title": "Topology",
+      "type": "object"
+    },
+    "Validation": {
+      "additionalProperties": false,
+      "properties": {
+        "is_valid": {
+          "title": "Is Valid",
+          "type": "boolean"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "errors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Errors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "is_valid"
+      ],
+      "title": "Validation",
+      "type": "object"
+    },
+    "VisualObject": {
+      "additionalProperties": false,
+      "properties": {
+        "name_zh": {
+          "default": "",
+          "title": "Name Zh",
+          "type": "string"
+        },
+        "name_en": {
+          "default": "",
+          "title": "Name En",
+          "type": "string"
+        },
+        "count": {
+          "default": 1,
+          "title": "Count",
+          "type": "integer"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "title": "VisualObject",
+      "type": "object"
+    },
+    "VisualProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "primary_class": {
+          "default": "unknown",
+          "title": "Primary Class",
+          "type": "string"
+        },
+        "display_name_zh": {
+          "default": "",
+          "title": "Display Name Zh",
+          "type": "string"
+        },
+        "aliases_zh": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases Zh",
+          "type": "array"
+        },
+        "aliases_en": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases En",
+          "type": "array"
+        },
+        "shape_traits": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Shape Traits",
+          "type": "array"
+        },
+        "functional_guess": {
+          "default": "",
+          "title": "Functional Guess",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "search_text_zh": {
+          "default": "",
+          "title": "Search Text Zh",
+          "type": "string"
+        },
+        "search_text_en": {
+          "default": "",
+          "title": "Search Text En",
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/VisualObject"
+          },
+          "title": "Objects",
+          "type": "array"
+        }
+      },
+      "title": "VisualProfile",
+      "type": "object"
+    },
+    "VisualResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "vlm",
+            "rule_based",
+            "rule_based_fallback",
+            "not_requested"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "provider": {
+          "default": "deepseek",
+          "title": "Provider",
+          "type": "string"
+        },
+        "analyzed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Analyzed At"
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisualProfile"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        }
+      },
+      "required": [
+        "kind",
+        "summary",
+        "model"
+      ],
+      "title": "VisualResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "data_type": {
+      "const": "cad",
+      "title": "Data Type",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "meta": {
+      "$ref": "#/$defs/Meta"
+    },
+    "content": {
+      "$ref": "#/$defs/CadContent"
+    }
+  },
+  "required": [
+    "schema_version",
+    "data_type",
+    "source",
+    "meta",
+    "content"
+  ],
+  "title": "CadEnvelope",
+  "type": "object"
+}

@@ -1,0 +1,10 @@
+# CAE 解析管道依赖（Python 3.10+，已在 3.13 上验证）
+h5py>=3.10          # 读取 Fluent CFF (.cas.h5/.dat.h5)
+numpy>=1.26         # 网格/场数据运算
+matplotlib>=3.8     # 云图/剖面图（离屏 Agg）
+pydantic>=2.5       # 统一 JSON Schema 校验
+
+# 可选
+fastapi>=0.110      # HTTP API
+uvicorn>=0.27       # 服务运行
+httpx>=0.27         # VLM（OpenAI 兼容接口）调用

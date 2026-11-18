@@ -1,0 +1,10 @@
+# CAD 管道依赖
+cadquery-ocp>=8.0.1        # OCP / OpenCascade Python 绑定（含 vtk、matplotlib、numpy）
+numpy
+pandas
+matplotlib
+vtk                        # 多视角渲染（随 cadquery-ocp 一起安装）
+pydantic>=2               # 统一 JSON Schema 校验
+# 可选：
+# fastapi  + uvicorn      # HTTP API（python -m cad_pipeline.cli --serve）
+# httpx                   # VLM 远程调用（已随 uvicorn/fastapi 依赖）

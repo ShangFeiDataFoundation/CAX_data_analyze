@@ -1,0 +1,7 @@
+# OP2 结果读取的可选依赖（不装也能用 Fluent CFF / CGNS / BDF 通道）
+#
+# 注意：pyNastran 1.4.1 在元数据里声明 numpy<2，但实测在 numpy 2.3.5 下可正常读取；
+# 若你的环境需要严格依赖解析，建议单独建虚拟环境。
+pyNastran>=1.4.1
+cpylog
+scipy
