@@ -521,6 +521,8 @@ class CredentialTests(unittest.TestCase):
         self.assertIn("performanceDetailBtn", text)
         self.assertIn("categoryFilter", text)
         self.assertIn("performanceModal", text)
+        self.assertIn("classification-table", text)
+        self.assertNotIn("完整 JSON 数据", text)
         for forbidden in ("服务端 Key", "开发者模式", "123456", "server key", "developer mode"):
             self.assertNotIn(forbidden.lower(), text.lower())
 

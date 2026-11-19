@@ -39,6 +39,36 @@ const ORIGIN_LABELS = {
   inferred: "推断",
   observed: "系统观测",
 };
+const FACE_TYPE_LABELS = {
+  PLANE: "平面",
+  CYLINDER: "圆柱面",
+  CONE: "圆锥面",
+  SPHERE: "球面",
+  TORUS: "圆环面",
+  BSPLINE: "B 样条面",
+  REVOLUTION: "旋转面",
+};
+const FEATURE_TYPE_LABELS = {
+  cylindrical: "圆柱特征",
+  pattern: "阵列",
+  round: "圆角",
+  chamfer: "倒角",
+};
+const TOPOLOGY_LABELS = {
+  solids: "实体",
+  shells: "壳体",
+  faces: "面",
+  edges: "边",
+  vertices: "顶点",
+};
+const CAPABILITY_LABELS = {
+  geometry: "几何",
+  mesh: "网格",
+  setup: "设置",
+  results: "结果",
+  render: "渲染",
+  vision: "视觉分析",
+};
 
 const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? "")
@@ -464,48 +494,234 @@ function resolveJsonPointer(documentValue, pointer) {
   return current;
 }
 
-function displayFieldValue(value) {
+function formatDisplayNumber(value, digits = 2, fixed = false) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return String(value ?? "暂无");
+  if (fixed) return number.toFixed(digits);
+  return number.toLocaleString("zh-CN", {
+    maximumFractionDigits: Number.isInteger(number) ? 0 : digits,
+  });
+}
+
+function formatBytes(value) {
+  const bytes = Number(value);
+  if (!Number.isFinite(bytes)) return "暂无";
+  const units = ["B", "KiB", "MiB", "GiB", "TiB"];
+  let amount = bytes;
+  let index = 0;
+  while (amount >= 1024 && index < units.length - 1) {
+    amount /= 1024;
+    index += 1;
+  }
+  return `${formatDisplayNumber(amount, index === 0 ? 0 : 2)} ${units[index]}`;
+}
+
+function formatDateValue(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value ?? "暂无");
+  return date.toLocaleString("zh-CN", { hour12: false });
+}
+
+function summarizeCountMap(value, labels = {}) {
+  return Object.entries(value || {})
+    .filter(([, count]) => Number(count) > 0)
+    .slice(0, 6)
+    .map(([key, count]) => `${labels[key] || key} ${formatDisplayNumber(count, 0)}`)
+    .join(" · ");
+}
+
+function summarizePlainObject(value) {
+  const entries = Object.entries(value || {}).filter(([, item]) => item != null);
+  if (!entries.length) return "无";
+  const text = entries.slice(0, 4).map(([key, item]) => {
+    let display;
+    if (Array.isArray(item)) display = `${item.length} 项`;
+    else if (item && typeof item === "object") display = `${Object.keys(item).length} 项`;
+    else if (typeof item === "boolean") display = item ? "是" : "否";
+    else if (typeof item === "number") display = formatDisplayNumber(item, 2);
+    else display = String(item);
+    return `${key.replaceAll("_", " ")}：${display}`;
+  }).join("；");
+  return entries.length > 4 ? `${text}；另有 ${entries.length - 4} 项` : text;
+}
+
+function formatObjectValue(value, facet) {
+  const pointer = facet.json_pointer || "";
+  if (pointer.endsWith("/bbox")) {
+    const dimensions = [
+      Number(value.xmax) - Number(value.xmin),
+      Number(value.ymax) - Number(value.ymin),
+      Number(value.zmax) - Number(value.zmin),
+    ];
+    const unit = facet.unit ? ` ${facet.unit}` : "";
+    return `${dimensions.map((item) => formatDisplayNumber(item, 2, true)).join(" × ")}${unit}`;
+  }
+  if (pointer.endsWith("/topology")) {
+    return summarizeCountMap(value, TOPOLOGY_LABELS) || "无拓扑统计";
+  }
+  if (pointer.endsWith("/validation")) {
+    const warnings = Number((value.warnings || []).length);
+    const errors = Number((value.errors || []).length);
+    return `${value.is_valid ? "校验通过" : "校验失败"} · ${warnings} 条警告 · ${errors} 条错误`;
+  }
+  if (pointer.endsWith("/capabilities")) {
+    const enabled = Object.entries(value)
+      .filter(([, item]) => Boolean(item))
+      .map(([key]) => CAPABILITY_LABELS[key] || key);
+    return enabled.length ? enabled.join(" · ") : "未声明能力";
+  }
+  if (pointer.endsWith("/provenance")) {
+    const steps = value.steps || [];
+    const sources = value.source_files || [];
+    const preview = steps.slice(0, 4).join(" → ");
+    return `${steps.length} 个处理步骤 · ${sources.length} 个来源文件${preview ? ` · ${preview}` : ""}`;
+  }
+  if (pointer.endsWith("/profile")) {
+    const name = value.display_name_zh || value.primary_class || "未知类别";
+    const traits = (value.shape_traits || []).slice(0, 4);
+    const aliases = [...(value.aliases_zh || []), ...(value.aliases_en || [])].slice(0, 4);
+    return [
+      name,
+      traits.length ? `特征：${traits.join("、")}` : "",
+      aliases.length ? `别名：${aliases.join("、")}` : "",
+    ].filter(Boolean).join("；");
+  }
+  if (pointer.endsWith("/models")) {
+    return summarizePlainObject(value);
+  }
+  if (pointer.endsWith("/materials") || facet.category === "material") {
+    const names = Object.keys(value || {});
+    return names.length
+      ? `${names.length} 种材料：${names.slice(0, 5).join("、")}${names.length > 5 ? " 等" : ""}`
+      : "未声明材料";
+  }
+  if (pointer.endsWith("/time")) {
+    if (value.transient === true) return "瞬态分析";
+    if (value.transient === false) return "稳态分析";
+    return summarizePlainObject(value);
+  }
+  if (pointer.endsWith("/mesh")) {
+    return [
+      value.cells != null ? `单元 ${formatDisplayNumber(value.cells, 0)}` : "",
+      value.nodes != null ? `节点 ${formatDisplayNumber(value.nodes, 0)}` : "",
+      value.faces != null ? `面 ${formatDisplayNumber(value.faces, 0)}` : "",
+      Object.keys(value.cell_types || {}).length
+        ? `单元类型 ${Object.keys(value.cell_types).slice(0, 3).join("、")}`
+        : "",
+    ].filter(Boolean).join(" · ");
+  }
+  return summarizePlainObject(value);
+}
+
+function formatArrayValue(value, facet) {
+  const pointer = facet.json_pointer || "";
+  if (!value.length) return "无";
+  if (pointer.endsWith("/features")) {
+    const counts = {};
+    for (const item of value) {
+      const type = FEATURE_TYPE_LABELS[item.type] || item.type || "其他";
+      counts[type] = (counts[type] || 0) + 1;
+    }
+    return `${value.length} 个：${Object.entries(counts).slice(0, 5).map(([type, count]) => `${type} ${count}`).join(" · ")}`;
+  }
+  if (pointer.endsWith("/face_types")) {
+    return value.slice(0, 6).map((item) => `${FACE_TYPE_LABELS[item.type] || item.type} ${item.count}`).join(" · ");
+  }
+  if (pointer.endsWith("/rendered_views")) {
+    return `${value.length} 个视图：${value.slice(0, 6).map((item) => item.view || "view").join("、")}`;
+  }
+  if (pointer.endsWith("/results")) return `${value.length} 个结果场`;
+  if (pointer.endsWith("/zone_results")) return `${value.length} 条分区结果`;
+  if (pointer.endsWith("/phases")) {
+    const materials = [...new Set(value.map((item) => item.material).filter(Boolean))];
+    return materials.length ? `${value.length} 相：${materials.join("、")}` : `${value.length} 相`;
+  }
+  const preview = value.slice(0, 3).map((item) => {
+    if (item && typeof item === "object") return item.name || item.type || item.view || "对象";
+    return String(item);
+  });
+  return `${value.length} 项${preview.length ? `：${preview.join("、")}` : ""}`;
+}
+
+function formatFacetValue(value, facet) {
   if (value == null) return "暂无";
-  let text = typeof value === "string" ? value : JSON.stringify(value);
-  if (text.length > 240) text = `${text.slice(0, 237)}...`;
-  return text;
+  if (Array.isArray(value)) return formatArrayValue(value, facet);
+  if (value && typeof value === "object") return formatObjectValue(value, facet);
+  if (typeof value === "boolean") return value ? "是" : "否";
+  if (typeof value === "number") {
+    const key = `${facet.key || ""} ${facet.json_pointer || ""}`;
+    if (key.endsWith("bytes")) return formatBytes(value);
+    if (/volume|surface_area|dimensions|mass_properties/.test(key)) {
+      return `${formatDisplayNumber(value, 2, true)}${facet.unit ? ` ${facet.unit}` : ""}`;
+    }
+    return `${formatDisplayNumber(value, facet.category === "geometry" ? 2 : 2)}${facet.unit ? ` ${facet.unit}` : ""}`;
+  }
+  if ((facet.json_pointer || "").endsWith("/sha256")) {
+    return `${String(value).slice(0, 12)}…`;
+  }
+  if ((facet.json_pointer || "").endsWith("_at")) return formatDateValue(value);
+  return String(value);
+}
+
+function renderClassificationCategory(category, facets, doc) {
+  const limit = 16;
+  const shown = facets.slice(0, limit);
+  const rows = shown.map((item) => {
+    const value = formatFacetValue(resolveJsonPointer(doc, item.json_pointer), item);
+    const origin = ORIGIN_LABELS[item.origin] || item.origin;
+    const confidence = item.confidence == null ? "" : ` · ${(item.confidence * 100).toFixed(0)}%`;
+    return `
+      <tr>
+        <td>${escapeHtml(item.label_zh || item.key)}</td>
+        <td>${escapeHtml(value)}</td>
+        <td><span class="chip ${item.origin === "inferred" ? "origin-inferred" : ""}">${escapeHtml(origin)}${escapeHtml(confidence)}</span></td>
+      </tr>`;
+  }).join("");
+  const remainder = facets.length > limit
+    ? `<div class="classification-note">另有 ${facets.length - limit} 项完整数据保存在后台和导出文件中。</div>`
+    : "";
+  return `
+    <section class="classification-category">
+      <div class="classification-category-head">
+        <h4>${escapeHtml(CATEGORY_LABELS[category] || category)}</h4>
+        <span>${facets.length} 项</span>
+      </div>
+      <div class="classification-table-wrap">
+        <table class="classification-table">
+          <thead><tr><th>字段</th><th>值</th><th>来源</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      ${remainder}
+    </section>`;
 }
 
 function renderClassification(classification, doc) {
   const facets = classification?.facets || [];
   if (!facets.length) return '<span class="chip">暂无分类</span>';
-  const layers = [
-    ["data", "数据分类"],
-    ["metadata", "元数据分类"],
-  ];
-  return layers.map(([layer, title]) => {
-    const selected = facets.filter((item) => item.layer === layer);
-    if (!selected.length) return "";
-    const categories = [...new Set(selected.map((item) => CATEGORY_LABELS[item.category] || item.category))];
-    const rows = selected.slice(0, 50).map((item) => {
-      const value = displayFieldValue(resolveJsonPointer(doc, item.json_pointer));
-      const unit = item.unit ? ` ${item.unit}` : "";
-      const origin = ORIGIN_LABELS[item.origin] || item.origin;
-      const confidence = item.confidence == null ? "" : ` · 置信度 ${(item.confidence * 100).toFixed(0)}%`;
-      return `
-        <div class="classification-item">
-          <div class="classification-label">
-            ${escapeHtml(item.label_zh || item.key)}
-            <div class="classification-meta">
-              <span class="chip ${item.origin === "inferred" ? "origin-inferred" : ""}">${escapeHtml(origin)}${escapeHtml(confidence)}</span>
-            </div>
-          </div>
-          <div class="classification-value">${escapeHtml(value)}${escapeHtml(unit)}</div>
-        </div>`;
-    }).join("");
-    const remainder = selected.length > 50 ? `<div class="performance-note">另有 ${selected.length - 50} 个字段未展开</div>` : "";
-    return `
-      <div class="classification-layer">
-        <h4>${escapeHtml(title)} · ${escapeHtml(categories.join(" / "))}</h4>
-        <div class="classification-list">${rows}</div>
-        ${remainder}
-      </div>`;
-  }).join("");
+  const order = new Map(CATEGORY_OPTIONS.map(([key], index) => [key, index]));
+  const grouped = new Map();
+  for (const facet of facets) {
+    const key = `${facet.layer}:${facet.category}`;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(facet);
+  }
+  const entries = [...grouped.entries()].sort(
+    (left, right) => (order.get(left[0].split(":")[1]) ?? 999) - (order.get(right[0].split(":")[1]) ?? 999),
+  );
+  const renderLayer = (layer) => entries
+    .filter(([key]) => key.startsWith(`${layer}:`))
+    .map(([key, items]) => renderClassificationCategory(key.split(":")[1], items, doc))
+    .join("");
+  const dataTables = renderLayer("data");
+  const metadataTables = renderLayer("metadata");
+  return `
+    ${dataTables ? `<div class="classification-category-stack">${dataTables}</div>` : ""}
+    ${metadataTables ? `
+      <details class="classification-metadata">
+        <summary>元数据分类 <span>${(classification.summary || []).filter((item) => item.layer === "metadata").length} 类</span></summary>
+        <div class="classification-category-stack">${metadataTables}</div>
+      </details>` : ""}`;
 }
 
 function renderRecordPerformance(performance) {
@@ -533,7 +749,6 @@ async function openDetail(recordId) {
     const doc = detail.json || {};
     const content = doc.content || {};
     const views = content.rendered_views || [];
-    const profile = detail.visual_profile || {};
     const card = detail.card || {};
     const visual = content.visual || {};
     const images = views
@@ -541,14 +756,9 @@ async function openDetail(recordId) {
       .slice(0, 6)
       .map((view) => `<img src="/api/runs/${encodeURIComponent(state.run.id)}/asset?record_id=${encodeURIComponent(recordId)}&path=${encodeURIComponent(view.path)}" alt="${escapeHtml(view.view)}">`)
       .join("");
-    const traits = (profile.shape_traits || []).map((item) => `<span class="chip">${escapeHtml(item)}</span>`).join("");
-    const aliases = [...(profile.aliases_zh || []), ...(profile.aliases_en || [])]
-      .map((item) => `<span class="chip">${escapeHtml(item)}</span>`).join("");
     const cardMetrics = (card.metrics || [])
       .map((metric) => `<div class="modal-metric"><span>${escapeHtml(metric.label)}</span><b>${escapeHtml(metric.value)}</b></div>`)
       .join("");
-    const cardTags = (card.tags || [])
-      .map((item) => `<span class="chip">${escapeHtml(item)}</span>`).join("");
     const classification = detail.classification || doc.meta?.classification || {};
     const classificationPanel = renderClassification(classification, doc);
     const recordPerformance = renderRecordPerformance(detail.performance || {});
@@ -565,16 +775,18 @@ async function openDetail(recordId) {
           <p>${escapeHtml(visual.summary || detail.summary || "暂无")}</p>
           <div class="detail-block"><h3>关键指标</h3><div class="modal-metrics">${cardMetrics || '<span class="chip">暂无</span>'}</div></div>
           <div class="detail-block"><h3>性能</h3>${recordPerformance}</div>
-          <div class="detail-block"><h3>数据与元数据分类</h3><div class="classification-summary">${classificationPanel}</div></div>
-          <div class="detail-block"><h3>数据标签</h3><div class="chips">${cardTags || '<span class="chip">暂无</span>'}</div></div>
-          <div class="detail-block"><h3>类别</h3><p>${escapeHtml(profile.display_name_zh || profile.primary_class || "未知")}</p></div>
-          <div class="detail-block"><h3>形状特征</h3><div class="chips">${traits || '<span class="chip">暂无</span>'}</div></div>
-          <div class="detail-block"><h3>同义词</h3><div class="chips">${aliases || '<span class="chip">暂无</span>'}</div></div>
-          <div class="detail-block"><h3>判断依据</h3><p>${escapeHtml((profile.evidence || []).join("；") || "暂无")}</p></div>
           ${visual.error ? `<div class="detail-block"><h3>视觉 API 错误</h3><p class="failed">${escapeHtml(visual.error)}</p></div>` : ""}
         </div>
       </div>
-      <div class="detail-block"><h3>完整 JSON 数据</h3><pre>${escapeHtml(JSON.stringify(doc, null, 2))}</pre></div>`;
+      <div class="detail-block classification-detail-block">
+        <div class="classification-heading">
+          <div>
+            <h3>分类数据</h3>
+            <p>按分类表格展示，数值已按阅读习惯格式化；完整精度保存在后台和导出文件中。</p>
+          </div>
+        </div>
+        <div class="classification-summary">${classificationPanel}</div>
+      </div>`;
     const actions = document.createElement("div");
     actions.className = "modal-actions";
     const regenerate = document.createElement("button");
